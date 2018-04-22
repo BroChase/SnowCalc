@@ -14,8 +14,8 @@ def agg_regions_snow():
     df_list_temp = []
     df_list = []
     for file in fips_codes:
-        path = 'Colorado19902016/precip/'+file+'precip.csv'
-        path2 = 'Colorado19902016/temp/'+file+'temp.csv'
+        path = 'Snow19902016/precip/'+file+'precip.csv'
+        path2 = 'Snow19902016/temp/'+file+'temp.csv'
 
         df = pd.read_csv(path)
         df2 = pd.read_csv(path2)
