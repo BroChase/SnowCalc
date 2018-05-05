@@ -45,7 +45,7 @@ def agg_regions_snow(basefile, range, startdate, enddate):
         result = pd.concat([result, SOI], axis=1)
         result['FIPS'] = file
         # sup the precipitations across the row and create a snow column
-        result['snow'] = result.iloc[:, :366].sum(axis=1)
+        result['snow'] = result.iloc[:, :-13].sum(axis=1)
         # precipitation to snow calculation
         result['snow'] = result['snow'].apply(lambda x: x*10)
         # append the results dataframe to list
@@ -79,7 +79,7 @@ def precip_month(df_precip, df_snow):
     df_precip['Feb_p'] += df_precip.iloc[:, 365:365].sum(axis=1)
     df_precip['snow'] = df_snow['snow']
 
-    df_precip.drop(df_precip.columns[0:366], axis=1, inplace=True)
+    df_precip.drop(df_precip.columns[0:-14], axis=1, inplace=True)
 
     return df_precip
 
@@ -103,7 +103,7 @@ def temp_month(df_temp):
     df_temp['Feb_t'] += df_temp.iloc[:, 365:365].sum(axis=1)
     df_temp['Feb_t'] = df_temp['Feb_t'] / 28.25
 
-    df_temp.drop(df_temp.columns[0:366], axis=1, inplace=True)
+    df_temp.drop(df_temp.columns[:-12], axis=1, inplace=True)
 
     return df_temp
 
