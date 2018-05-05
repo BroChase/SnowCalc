@@ -1,8 +1,13 @@
 import pandas as pd
 
 
+# basefile: filepath base
+# range: how many years of snow totals are being calculated 1 to n
+# startdate: range start ex: 199001
+# enddate: range end ex: 201501
 def agg_regions_snow(basefile, range, startdate, enddate):
 
+    # region list
     fips_codes = ['08037', '08049', '08051', '08053', '08057', '08065',
                   '08067', '08069', '08079', '08091', '08097', '08107',
                   '08109', '08111', '08113', '08117', '08013', '08015',
@@ -17,27 +22,33 @@ def agg_regions_snow(basefile, range, startdate, enddate):
     for file in fips_codes:
         path = basefile + 'precip/' + file + 'precip.csv'
         path2 = basefile + 'temp/' + file + 'temp.csv'
+        # store precipitation file in df
         df = pd.read_csv(path)
+        # store temp file in df
         df2 = pd.read_csv(path2)
         df.drop(df.columns[0], axis=1, inplace=True)
         df2.drop(df2.columns[0], axis=1, inplace=True)
-
+        # fill any nan values with 0
         df.fillna(value=0, inplace=True)
         df2.fillna(value=0, inplace=True)
-
+        # append the dateframes to lists of dataframes
         df_list_precip.append(df)
         df_list_temp.append(df2)
 
+        # if the temp is below or equal to 30 true if not false
         df3 = df2[:365].copy()
         df3[df3 <= 30] = 1
         df3[df3 > 30] = 0
-
+        # multiply the precipitation and temp frame to get days it snowed
         result = df.mul(df3, axis=0)
         SOI = soi_month(range, startdate, enddate)
         result = pd.concat([result, SOI], axis=1)
         result['FIPS'] = file
+        # sup the precipitations across the row and create a snow column
         result['snow'] = result.iloc[:, :366].sum(axis=1)
+        # precipitation to snow calculation
         result['snow'] = result['snow'].apply(lambda x: x*10)
+        # append the results dataframe to list
         df_list.append(result)
 
     df_precip = pd.concat(df_list_precip, ignore_index=True)
@@ -45,6 +56,9 @@ def agg_regions_snow(basefile, range, startdate, enddate):
     df_snow = pd.concat(df_list, ignore_index=True)
     return df_precip, df_temp, df_snow
 
+
+# Aggregate the days into their respective months
+# df_precip: dataframe of precipitations by day
 def precip_month(df_precip, df_snow):
 
 
@@ -69,7 +83,8 @@ def precip_month(df_precip, df_snow):
 
     return df_precip
 
-
+# Aggregate daily temps into month averages
+# df_temp: dateframe with daily temperatures
 def temp_month(df_temp):
 
     df_temp['Jan_t'] = df_temp.iloc[:, 0:30].sum(axis=1) / 31
@@ -92,6 +107,10 @@ def temp_month(df_temp):
 
     return df_temp
 
+# get the Southern Oscillation Index
+# ep = how many years
+# startdate: year to start ex: 199001
+# enddate: year to end on ex: 201512
 def soi_month(ep,startdate, enddate):
 
     index = []
@@ -108,9 +127,9 @@ def soi_month(ep,startdate, enddate):
         index.append('Oct_soi')
         index.append('Nov_soi')
         index.append('Dec_soi')
-
+    # data.csv contains NOAA historical SOI
     SOI = pd.read_csv('data.csv')
-    #SOI = SOI.loc['199001':'201512']
+    # get SOI for the given date ranges
     SOI = SOI.loc[startdate:enddate]
     SOI['Southern Oscillation Index (SOI)'] = SOI['Southern Oscillation Index (SOI)'].str.replace(' ','').astype(float)
     soi_month = SOI['Southern Oscillation Index (SOI)']
