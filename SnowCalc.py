@@ -1,7 +1,7 @@
 import pandas as pd
 
 
-def agg_regions_snow():
+def agg_regions_snow(basefile, range, startdate, enddate):
 
     fips_codes = ['08037', '08049', '08051', '08053', '08057', '08065',
                   '08067', '08069', '08079', '08091', '08097', '08107',
@@ -13,10 +13,10 @@ def agg_regions_snow():
     df_list_precip = []
     df_list_temp = []
     df_list = []
-    for file in fips_codes:
-        path = 'Snow19902016/precip/'+file+'precip.csv'
-        path2 = 'Snow19902016/temp/'+file+'temp.csv'
 
+    for file in fips_codes:
+        path = basefile + 'precip/' + file + 'precip.csv'
+        path2 = basefile + 'temp/' + file + 'temp.csv'
         df = pd.read_csv(path)
         df2 = pd.read_csv(path2)
         df.drop(df.columns[0], axis=1, inplace=True)
@@ -33,7 +33,7 @@ def agg_regions_snow():
         df3[df3 > 30] = 0
 
         result = df.mul(df3, axis=0)
-        SOI = soi_month()
+        SOI = soi_month(range, startdate, enddate)
         result = pd.concat([result, SOI], axis=1)
         result['FIPS'] = file
         result['snow'] = result.iloc[:, :366].sum(axis=1)
@@ -92,10 +92,10 @@ def temp_month(df_temp):
 
     return df_temp
 
-def soi_month():
+def soi_month(ep,startdate, enddate):
 
     index = []
-    for i in range(26):
+    for i in range(ep):
         index.append('Jan_soi')
         index.append('Feb_soi')
         index.append('Mar_soi')
@@ -110,8 +110,8 @@ def soi_month():
         index.append('Dec_soi')
 
     SOI = pd.read_csv('data.csv')
-    SOI = SOI.loc['199001':'201512']
-
+    #SOI = SOI.loc['199001':'201512']
+    SOI = SOI.loc[startdate:enddate]
     SOI['Southern Oscillation Index (SOI)'] = SOI['Southern Oscillation Index (SOI)'].str.replace(' ','').astype(float)
     soi_month = SOI['Southern Oscillation Index (SOI)']
 
@@ -121,7 +121,7 @@ def soi_month():
     m = 12
     n = 0
     df_list = []
-    for i in range(26):
+    for i in range(ep):
         temp = df_month[n:m].transpose()
         m += 12
         n += 12
